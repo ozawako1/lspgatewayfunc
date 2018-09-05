@@ -1,0 +1,16 @@
+{
+  "name": "httptriggerjs",
+  "version": "1.0.0",
+  "description": "azure functions for lspgateway",
+  "main": "index.js",
+  "dependencies": {
+    "request": "^2.85.0",
+    "tedious": "^2.3.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Freshmen of Motex Inc.",
+  "license": "ISC"
+}
