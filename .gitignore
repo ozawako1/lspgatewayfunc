@@ -20,6 +20,7 @@ project.lock.json
 /secrets
 /data
 .secrets
+.DS_Store
 appsettings.json
 local.settings.json
 
