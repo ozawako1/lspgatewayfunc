@@ -1,6 +1,6 @@
 var fs = require('fs');
 
-const CONFIG = "./lspgateway.ini";
+const CONFIG = "../conf/lspgateway.ini";
 
 
 

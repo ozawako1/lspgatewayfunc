@@ -26,4 +26,4 @@ local.settings.json
 
 node_modules
 HttpTriggerJS/debugcommand.txt
-lspgateway.ini
+conf
