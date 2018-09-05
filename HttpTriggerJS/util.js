@@ -1,7 +1,6 @@
 var fs = require('fs');
 
-const CONFIG = "../conf/lspgateway.ini";
-
+const my_config = require("../conf/lspgateway.js");
 
 
 function _get_config(section, key)
@@ -11,21 +10,21 @@ function _get_config(section, key)
     return json[section][key];
 };
 
-exports.get_config = function(section, key) 
+exports.get_chatwork_token = function(section, key) 
 {
-    return _get_config(section, key);    
+    return my_config.chatwork.token;    
 };
 
 exports.get_dbconn_config = function()
 {
 
     var hash = {};
-    hash['userName'] = _get_config("sqlserver", "id");
-    hash['password'] = _get_config("sqlserver", "password");
-    hash['server'] = _get_config("sqlserver", "host");
+    hash['userName'] = my_config.sqlserver.id;
+    hash['password'] = my_config.sqlserver.password;
+    hash['server'] = my_config.sqlserver.host;
     hash['options'] = {};
     hash['options']['encrypt'] = true;
-    hash['options']['database'] = _get_config("sqlserver", "database");
+    hash['options']['database'] = my_config.sqlserver.database;
 
     return hash;
     
