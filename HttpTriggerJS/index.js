@@ -57,7 +57,7 @@ function getInvInfo(ip, host, obj){
     if(ip){
       query += "WHERE ip_address = '"+ip+"' ";
     } else {
-      query += "WHERE machine = '"+host+"' ";
+      query += "WHERE machine like '%"+host+"%' ";
     }
     query += "order by machine, logon_user DESC;";
 
