@@ -108,13 +108,13 @@ function getInvInfo(target, obj){
   
   //////
 
-module.exports = function (context, req) {
+module.exports = function (context, req) 
+{
     context.log('JavaScript HTTP trigger function processed a request.');
+    context.log(req);
 
     var obj = null;
     var msgbody = "";
-
-    context.log(req);
 
     // 通信相手（user_agent）を見て、switch
     var ua = req.headers["user-agent"]; 
