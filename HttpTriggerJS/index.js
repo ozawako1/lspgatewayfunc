@@ -114,6 +114,8 @@ module.exports = function (context, req) {
     var obj = null;
     var msgbody = "";
 
+    cotext.log(req);
+
     // 通信相手（user_agent）を見て、switch
     var ua = req.headers["user-agent"]; 
     if (ua.indexOf("ChatWork-Webhook/", 0) === 0) {
