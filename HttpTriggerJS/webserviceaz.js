@@ -110,7 +110,8 @@ class CWebServiceChatwork extends CWebServiceAz {
         this.roomid = req.body.webhook_event.room_id;
         this.fromid = req.body.webhook_event.account_id;
         this.msgid = req.body.webhook_event.message_id;
-        this.token = my_config.chatwork.token;
+        this.token = my_config.chatwork.postToken;
+        this.webhooktoken = my_config.chatwork.webhookToken;
     }
     
     GetReplyMsg(results) {
