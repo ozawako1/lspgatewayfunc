@@ -89,8 +89,9 @@ function format_msg(jdata) {
 
             msg += "OS Version: "    + jdata["OSVersion"] + "\r\n";
             msg += "32bit/64bit: "   + jdata["Platform"] + "\r\n";
-            msg += "最終更新日時: "  + jdata["InvInfoUpdateTime"] + "\r\n";
             msg += "MR Version: "    + jdata["MRVersion"] + "\r\n";
+            msg += "Cylance Version: "    + jdata["CylanceVersion"] + "\r\n";
+            msg += "最終更新日時: "  + jdata["InvInfoUpdateTime"] + "\r\n";
         }
 
         msg += "[/info]";

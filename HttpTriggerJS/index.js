@@ -48,10 +48,13 @@ function executeStatement(obj, connection, query){
         results["Platform"]= val;  
         break;
       case 6:
-        results["InvInfoUpdateTime"]= val;  
+        results["MRVersion"]= val;  
         break;
       case 7:
-        results["MRVersion"]= val;  
+        results["CylanceVersion"]= val;  
+        break;
+      case 8:
+        results["InvInfoUpdateTime"]= val;  
         break;
       } 
       count++;  
@@ -61,7 +64,8 @@ function executeStatement(obj, connection, query){
   queryrequest.on('requestCompleted', function(rowCount, more){
     console.log('reqCompleted');
     connection.close();
-    obj.MakeResponse(results);       
+    obj.MakeResponse(results);
+    console.log(results);
   });
 
   connection.execSql(queryrequest);
@@ -77,14 +81,13 @@ function getInvInfo(target, obj){
   console.log("getInvInfo Start [" + target + "]");
 
   var config = my_config.sqlserver;
-  var query = "SELECT machine, logon_user, ip_address, mac_address, os_version, "
-  + "CASE WHEN platform = 0 THEN '32' ELSE (CASE WHEN platform = 1 THEN '64' ELSE platform END) END platform, "
-  + "CASE WHEN update_date IS NULL THEN receive_date ELSE (CASE WHEN receive_date IS NULL THEN update_date ELSE (CASE WHEN receive_date > update_date THEN receive_date ELSE update_date END) END) END update_date, "
-  + "mr_version " 
-  + "FROM VINVENTORIES "
-  + "WHERE ip_address = '"+target+"' OR "
-  + "machine like '%"+target+"%' "
-  + "order by machine, logon_user DESC;";
+  var query = "SELECT " +
+    "machine, logon_user, ip_address, mac_address, "+
+    "os_version, platform, "+
+    "mr_version, cylance_version, update_date " + 
+    "FROM V_INVENTORIES " +
+    "WHERE ip_address = '"+target+"' OR machine = '"+target+"' " +
+    "ORDER BY machine, logon_user DESC";
 
   //CreateConnection
   var connection = new Connection(config);
@@ -143,6 +146,7 @@ module.exports = function (context, req)
     var rawbody = req.rawBody;
     var signature = req.headers["x-chatworkwebhooksignature"];
     
+    // ChatworkからのWebhookか確認
     if (is_chatwork(rawbody, signature) == false) {
       context.log("Not Chatwork.");
       httpret = 403;

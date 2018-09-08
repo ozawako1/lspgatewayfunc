@@ -1,0 +1,61 @@
+create view dbo.V_INVENTORIES
+(
+	machine,
+	logon_user,
+	ip_address,
+	mac_address,
+	os_version,
+	platform,
+	mr_version,
+	cylance_version,
+	update_date
+)
+as
+SELECT
+	AGT.ｺﾝﾋﾟｭｰﾀ名, 
+	INV.ﾛｸﾞｵﾝﾕｰｻﾞ名,
+	AGT.IPｱﾄﾞﾚｽ,
+	AGT.MACｱﾄﾞﾚｽ,
+	INV.OSﾊﾞｰｼﾞｮﾝ,
+	CASE 
+        WHEN INV.ﾌﾟﾗｯﾄﾌｫｰﾑ = 0 
+        THEN '32' 
+        ELSE (CASE 
+                WHEN INV.ﾌﾟﾗｯﾄﾌｫｰﾑ = 1 
+                THEN '64' 
+                ELSE INV.ﾌﾟﾗｯﾄﾌｫｰﾑ
+            END) 
+    END ﾌﾟﾗｯﾄﾌｫｰﾑ,
+	INV.MRﾊﾞｰｼﾞｮﾝ,
+	INV.CyProVer,
+	CASE
+		WHEN AWORK.資産手動更新日時 IS NULL 
+		THEN AWORK.資産ﾄﾗｯﾌﾟ受信日時 
+		ELSE ( CASE 
+				WHEN AWORK.資産ﾄﾗｯﾌﾟ受信日時 > AWORK.資産手動更新日時 
+				THEN AWORK.資産ﾄﾗｯﾌﾟ受信日時 
+				ELSE AWORK.資産手動更新日時 END) 
+	END update_date
+FROM
+	dbo.AGTDSP AGT 
+	INNER JOIN dbo.INVDSP INV ON AGT.ｴｰｼﾞｪﾝﾄNo = INV.ｴｰｼﾞｪﾝﾄNo AND AGT.ｻﾌﾞﾏﾈｰｼﾞｬNo = INV.ｻﾌﾞﾏﾈｰｼﾞｬNo 
+	INNER JOIN dbo.AGTWORK AWORK ON AGT.ｻﾌﾞﾏﾈｰｼﾞｬNo = AWORK.ｻﾌﾞﾏﾈｰｼﾞｬNo AND AGT.ｴｰｼﾞｪﾝﾄNo = AWORK.ｴｰｼﾞｪﾝﾄNo
+UNION
+SELECT
+	表示名, 
+	ﾛｸﾞｵﾝﾕｰｻﾞ名, 
+	IPｱﾄﾞﾚｽ, 
+	MACｱﾄﾞﾚｽ, 
+	OSﾊﾞｰｼﾞｮﾝ, 
+	CASE 
+        WHEN ﾌﾟﾗｯﾄﾌｫｰﾑ = 0 THEN '32' 
+        ELSE (CASE 
+                WHEN ﾌﾟﾗｯﾄﾌｫｰﾑ = 1 THEN '64' 
+                ELSE ﾌﾟﾗｯﾄﾌｫｰﾑ
+            END)
+    END ﾌﾟﾗｯﾄﾌｫｰﾑ,
+	NULL, 
+	CyProVer, 
+	資産情報更新日時
+FROM 
+	dbo.ITEMDSP
