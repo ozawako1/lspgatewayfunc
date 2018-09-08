@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "crypto": "^1.0.1",
+    "promise": "^8.0.1",
     "request": "^2.87.0",
     "tedious": "^2.3.1"
   },
