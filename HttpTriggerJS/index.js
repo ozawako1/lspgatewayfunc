@@ -107,26 +107,17 @@ function getInvInfo(target, obj){
 
 }
 
-function is_chatwork(rawbody, signature, ctx)
+function is_chatwork(rawbody, signature)
 {
-/*
-トークンをBASE64デコードしたバイト列を秘密鍵とします（トークンはWebhook編集画面で確認できます）
-チャットワークのWebhookからのHTTPSリクエストボディをそのままの文字列で取得します
-取得したHTTPSリクエストボディと秘密鍵をつかって、HMAC-SHA256アルゴリズムによりダイジェスト値を取得します
-ダイジェスト値をBASE64エンコードした文字列が、リクエストヘッダに付与された署名（`X-ChatWorkWebhookSignature`ヘッダ、もしくはリクエストパラメータ`chatwork_webhook_signature`の値）と一致することを確認します
-*/
   var ret = false;
 
   if (my_config.env.runningon != "Local") {
-    
+
     var secretKey = new Buffer(my_config.chatwork.webhookToken, 'base64');
     var hmac = my_crypto.createHmac('sha256', secretKey);
     
     var x = hmac.update(rawbody).digest('base64');
     var y = signature;
-
-    ctx.log("hash:" + x);
-    ctx.log("sign:" + y);
 
     if (x == y) {
       ret = true;
@@ -152,18 +143,13 @@ module.exports = function (context, req)
     var rawbody = req.rawBody;
     var signature = req.headers["x-chatworkwebhooksignature"];
     
-   if (is_chatwork(rawbody, signature, context) == false) {
+    if (is_chatwork(rawbody, signature) == false) {
+      context.log("Not Chatwork.");
       httpret = 403;
     } else {
-      // 通信相手（user_agent）を見て、switch
-      var ua = req.headers["user-agent"]; 
-      if (ua.indexOf("ChatWork-Webhook/", 0) === 0) {
-        //Chatwork
-        console.log("access from chatwork.");
-        // 情シスbot宛かの確認。
-        if ( req.body.webhook_event.body.indexOf("[To:" + JOSYSBOT_ID + "]", 0) === 0) {
-          obj = new webservice.CWebServiceChatwork(req);
-        }
+      // 情シスbot宛かの確認。
+      if ( req.body.webhook_event.body.indexOf("[To:" + JOSYSBOT_ID + "]", 0) == 0) {
+        obj = new webservice.CWebServiceChatwork(req);
         msgbody = obj.GetMsgBody();
         getInvInfo(msgbody, obj);
       }
