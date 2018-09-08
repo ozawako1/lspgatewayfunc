@@ -1,5 +1,6 @@
 
 const my_config = require("../conf/lspgateway.js");
+const my_crypto = require('crypto');
 /* FORMAT of conf/lspgateway.js 
 var config = {};
 config.chatwork = {
@@ -10,6 +11,8 @@ config.sqlserver = {
     "password": "xxx",
     "server": "xxx.database.windows.net",
     "options":{
+		"useColumnNames": true,
+        "rowCollectionOnRequestCompletion": true,
         "encrpyt": true,
         "database": "xxx"
     }
@@ -18,43 +21,7 @@ module.exports = config;
 */
 
 const TO_REG = /\[To:[0-9]*\].*\n/;
-
-class CWebServiceAz {
-    constructor ( req ) {
-        this.request = req;
-        this.useragent = req.headers["user-agent"];
-
-        this.msgbody = req.body;
-        this.returnurl = "";
-        this.resmsg = "";
-
-        this.httpclient = require("request");;
-    }
-
-    GetMsgBody() {
-        return (this.msgbody === undefined ? "" : this.msgbody);
-    }
-
-    GetReplyUrl() {
-        return this.returnurl;
-    }
-
-    GetReplyMsg(results) {
-        return results;
-    }
-
-    GetReplyMsg(){
-        return this.results;
-    }
-    
-    GetReply() {
-        return this.resmsg;
-    }
-
-    MakeResponse(results) {
-        return results;
-    }
-}
+const ME_ID = 2642322;
 
 function format_msg(jdata) 
 {
@@ -84,42 +51,72 @@ function format_msg(jdata)
 };
 
 
-class CWebServiceChatwork extends CWebServiceAz {
+class CWebServiceChatwork {
     constructor (req) {
-        super(req);
-        var orgmsgbody = req.body.webhook_event.body;
-        this.msgbody = orgmsgbody.replace(TO_REG, '');
+
+		this.request = req;
+		this.httpclient = require("request");;
+		
+		this.orgmsgbody = req.body.webhook_event.body; 
+        this.msgbody = this.orgmsgbody.replace(TO_REG, '');
         this.returnurl = "https://api.chatwork.com/v2/rooms/" + req.body.webhook_event.room_id + "/messages";
         
         this.roomid = req.body.webhook_event.room_id;
         this.fromid = req.body.webhook_event.account_id;
-        this.msgid = req.body.webhook_event.message_id;
-        this.token = my_config.chatwork.postToken;
-        this.webhooktoken = my_config.chatwork.webhookToken;
-    }
+		this.msgid = req.body.webhook_event.message_id;
+		
+	}
+	
+	is_to_me(){
+		var ret = false;
+		if (this.orgmsgbody.indexOf("[To:" + ME_ID + "]", 0) == 0) {
+			ret = true;
+		}
+		return ret;
+	}
+
+	is_from_chatwork(){
+		var ret = false;
+
+		if (my_config.env.runningon != "Local") {
+
+			var signature = this.request.headers["x-chatworkwebhooksignature"];
+			var webhooktoken = my_config.chatwork.webhookToken;
+			var rawbody = this.request.rawbody;
+
+			var secretKey = new Buffer(webhooktoken, 'base64');
+			var hmac = my_crypto.createHmac('sha256', secretKey);	
+			var hash = hmac.update(rawbody).digest('base64');
+			
+			if (hash == signature) {
+				ret = true;
+			}
+		} else {
+			// Maybe Local Debug, No check.
+			ret = true;
+		}
+	
+		return ret;
+	}
+
+	GetMsgBody() {
+		return this.msgbody;
+	}
     
-    GetReplyMsg(results) {
+    MakeResponse(results){
+        
         var msg = "[rp aid=" + this.fromid + " to=" + this.roomid + "-" + this.msgid +"]" + "\r\n" +
             format_msg(results);
 
         var response = {
             headers: {
-                'X-ChatWorkToken': this.token
+                'X-ChatWorkToken': my_config.chatwork.postToken
             },
             form: {
                 body: msg
             } 
         };
-        
-        this.resmsg = response;
-
-        return response;
-    }
-
-    MakeResponse(results){
-        
-        var response = this.GetReplyMsg(results);
-     
+             
         this.httpclient.post(this.returnurl, response, function (err, res, body) { 
             if (!err && res.statusCode == 200) {
               console.log(body);
@@ -131,5 +128,4 @@ class CWebServiceChatwork extends CWebServiceAz {
     }
 }
 
-module.exports.CWebServiceAz = CWebServiceAz
 module.exports.CWebServiceChatwork = CWebServiceChatwork

@@ -1,24 +1,24 @@
 
-var webservice = require("./webserviceaz.js");
+const my_webservice = require("./webservice.js");
 const my_config = require("../conf/lspgateway.js");
-const my_crypto = require('crypto');
+
 var Connection = require('tedious').Connection;
 var TedRequest = require('tedious').Request;  
 var TYPES = require('tedious').TYPES;
-
-const JOSYSBOT_ID = 2642322;
 
 function executeStatement(obj, connection, target){ 
 	console.log("executeStatement start"); 
 	
 	var results = [];
-    var query = "SELECT " +
-		"machine, logon_user, ip_address, mac_address, "+
-		"os_version, platform, "+
-		"mr_version, cylance_version, update_date " + 
-		"FROM V_INVENTORIES " +
-		"WHERE ip_address = @ipaddr OR machine = @machine " +
-		"ORDER BY machine, logon_user DESC";
+	var query = "SELECT " +
+					"machine, logon_user, ip_address, mac_address, os_version, platform, "+
+					"mr_version, cylance_version, update_date " + 
+				"FROM "+
+					"V_INVENTORIES " +
+				"WHERE "+
+					"ip_address = @ipaddr OR machine = @machine " +
+				"ORDER BY "+
+					"machine, logon_user DESC";
 
     var queryrequest = new TedRequest(query, function(err, rowCount, rows){
 		if (err) {
@@ -47,7 +47,7 @@ function executeStatement(obj, connection, target){
 
 
 
-function getInvInfo(target, obj)
+function getInvInfo(obj, target)
 {
 
 	console.log("getInvInfo Start [" + target + "]");
@@ -71,30 +71,6 @@ function getInvInfo(target, obj)
 
 }
 
-function is_chatwork(rawbody, signature)
-{
-	var ret = false;
-
-	if (my_config.env.runningon != "Local") {
-
-		var secretKey = new Buffer(my_config.chatwork.webhookToken, 'base64');
-		var hmac = my_crypto.createHmac('sha256', secretKey);
-
-		var x = hmac.update(rawbody).digest('base64');
-		var y = signature;
-
-		if (x == y) {
-		ret = true;
-		}
-	} else {
-		// Maybe Local Debug, No check.
-		ret = true;
-	}
-
-	return ret;
-}
-  
-  //////
 
 module.exports = function (context, req) 
 {
@@ -104,27 +80,18 @@ module.exports = function (context, req)
 	var obj = null;
 	var msgbody = "";
 
-	var rawbody = req.rawBody;
-	var signature = req.headers["x-chatworkwebhooksignature"];
+	var obj = new my_webservice.CWebServiceChatwork(req);
 
-	// ChatworkからのWebhookか確認
-	if (is_chatwork(rawbody, signature) == false) {
-		context.log("Not Chatwork.");
-		httpret = 403;
-	} else {
-		// 情シスbot宛かの確認。
-		if ( req.body.webhook_event.body.indexOf("[To:" + JOSYSBOT_ID + "]", 0) == 0) {
-			obj = new webservice.CWebServiceChatwork(req);
-			msgbody = obj.GetMsgBody();
-			getInvInfo(msgbody, obj);
-		}
-		httpret = 200;
+	if (obj.is_to_me() && obj.is_from_chatwork()){
+		msgbody = obj.GetMsgBody();
+		getInvInfo(obj, msgbody);
 	}
 
 	context.res = {
-		status: httpret,
+		status: 200,
 		body: "req:[" + msgbody + "]"
 	};
+
 	context.done();
     
 };
