@@ -82,7 +82,7 @@ class CWebServiceChatwork {
 
 			var signature = this.request.headers["x-chatworkwebhooksignature"];
 			var webhooktoken = my_config.chatwork.webhookToken;
-			var rawbody = this.request.rawbody;
+			var rawbody = this.request.rawBody;
 
 			var secretKey = new Buffer(webhooktoken, 'base64');
 			var hmac = my_crypto.createHmac('sha256', secretKey);	

@@ -75,7 +75,7 @@ function getInvInfo(obj, target)
 module.exports = function (context, req) 
 {
 	context.log('JavaScript HTTP trigger function processed a request.');
-	context.log(req);
+	context.log.info(req);
 
 	var obj = null;
 	var msgbody = "";
