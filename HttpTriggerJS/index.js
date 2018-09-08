@@ -116,17 +116,23 @@ function is_chatwork(rawbody, signature, ctx)
 ダイジェスト値をBASE64エンコードした文字列が、リクエストヘッダに付与された署名（`X-ChatWorkWebhookSignature`ヘッダ、もしくはリクエストパラメータ`chatwork_webhook_signature`の値）と一致することを確認します
 */
   var ret = false;
-  var secretKey = my_config.chatwork.webhookToken;
-  hmac = my_crypto.createHmac('sha256', secretKey);
-  hmac.update(rawbody);
-  
-  var x = hmac.digest('hex');
-  var y = signature;
 
-  ctx.log("hash:" + x);
-  ctx.log("sign:" + y);
+  if (my_config.env.runningon != "Local") {
+    
+    var secretKey = new Buffer(my_config.chatwork.webhookToken, 'base64');
+    var hmac = my_crypto.createHmac('sha256', secretKey);
+    
+    var x = hmac.update(rawbody).digest('base64');
+    var y = signature;
 
-  if (x == y) {
+    ctx.log("hash:" + x);
+    ctx.log("sign:" + y);
+
+    if (x == y) {
+      ret = true;
+    }
+  } else {
+    // No check.
     ret = true;
   }
 
